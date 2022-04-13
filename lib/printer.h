@@ -5,14 +5,12 @@
 #include <fstream>
 #include <iostream>
 #include <opencv2/opencv.hpp>
+#include <opencv2/imgproc.hpp>
+#include <opencv2/highgui.hpp>
 #include <sstream>
 #include <string>
 #include <vector>
 
-struct point {
-    int x;
-    int y;
-};
 
 class Printer {
 public:
@@ -28,7 +26,9 @@ public:
 private:
     void initial_vertives(std::string src);
 
-    std::vector<point> input_vertices;
+    cv::Mat img;
+
+    std::vector<cv::Point> input_vertices;
 };
 
 #endif

@@ -1,0 +1,13 @@
+/home/jt/project/CAM_midterm/Debug/CMakeFiles/install/strip.dir
+/home/jt/project/CAM_midterm/Debug/CMakeFiles/install/local.dir
+/home/jt/project/CAM_midterm/Debug/CMakeFiles/install.dir
+/home/jt/project/CAM_midterm/Debug/CMakeFiles/list_install_components.dir
+/home/jt/project/CAM_midterm/Debug/CMakeFiles/rebuild_cache.dir
+/home/jt/project/CAM_midterm/Debug/CMakeFiles/edit_cache.dir
+/home/jt/project/CAM_midterm/Debug/lib/CMakeFiles/install/strip.dir
+/home/jt/project/CAM_midterm/Debug/lib/CMakeFiles/install.dir
+/home/jt/project/CAM_midterm/Debug/lib/CMakeFiles/list_install_components.dir
+/home/jt/project/CAM_midterm/Debug/lib/CMakeFiles/rebuild_cache.dir
+/home/jt/project/CAM_midterm/Debug/lib/CMakeFiles/edit_cache.dir
+/home/jt/project/CAM_midterm/Debug/lib/CMakeFiles/install/local.dir
+/home/jt/project/CAM_midterm/Debug/lib/CMakeFiles/printer.dir

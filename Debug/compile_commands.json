@@ -1,0 +1,7 @@
+[
+{
+  "directory": "/home/jt/project/CAM_midterm/Debug/lib",
+  "command": "/usr/bin/c++  -DDEBUG -I/usr/local/include/opencv4 -I/home/jt/project/CAM_midterm/lib   -Wall -g   -std=gnu++11 -o CMakeFiles/printer.dir/printer.cpp.o -c /home/jt/project/CAM_midterm/lib/printer.cpp",
+  "file": "/home/jt/project/CAM_midterm/lib/printer.cpp"
+}
+]

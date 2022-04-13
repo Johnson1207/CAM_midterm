@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 2.8)
 
 # Set variables
-set(PROJECT_NAME GA_test)
+set(PROJECT_NAME printer_test)
 set(PROJECT_LANGUAGE C CXX)
 set(PROJECT_DEPS
     printer ${OpenCV_LIBS}
