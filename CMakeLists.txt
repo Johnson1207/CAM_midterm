@@ -8,7 +8,7 @@ cmake_minimum_required(VERSION 2.8)
  endif()
 
  # Set variables
- set(PROJECT_NAME CAM)
+ set(PROJECT_NAME CAM_MID)
  set(PROJECT_LANGUAGE C CXX)
 
  # Environment variables
@@ -39,7 +39,7 @@ cmake_minimum_required(VERSION 2.8)
 
  # Utility paths
  set(UTIL_PATHS
-     ${CMAKE_CURRENT_SOURCE_DIR}/util
+     #${CMAKE_CURRENT_SOURCE_DIR}/util
      )
 
  if(${BUILD_TEST})
