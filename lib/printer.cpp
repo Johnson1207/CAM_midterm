@@ -38,41 +38,41 @@ void Printer::draw_inner_polygon()
     int right = 0;
 
     for (uint i = 0; i < this->input_contour.size(); i++) {
-        cout << this->input_contour[i].mid << endl;
+        // cout << this->input_contour[i].mid << endl;
         float tangentVector[2] = { 1, -1 / this->input_contour[i].slope };
-        cout << "Origin: " << tangentVector[0] << "  " << tangentVector[1] << endl;
+        // cout << "Origin: " << tangentVector[0] << "  " << tangentVector[1] << endl;
 
         if ((this->input_contour[i].mid.x < this->Origin.x && this->input_contour[i].mid.y < this->Origin.y)) {
             if (this->input_contour[i].slope < 0) { // OK
                 right = 1;
-                cout << "right" << endl;
+                // cout << "right" << endl;
             } else if (this->input_contour[i].slope > 0) { //!!!!!!
                 right = 0;
-                cout << "left???" << endl;
+                // cout << "left???" << endl;
             }
         } else if ((this->input_contour[i].mid.x > this->Origin.x && this->input_contour[i].mid.y < this->Origin.y)) {
             if (this->input_contour[i].slope < 0) { //!!!!!
                 right = 0;
-                cout << "right???" << endl;
+                // cout << "right???" << endl;
             } else if (this->input_contour[i].slope > 0) { // OK
                 right = -1;
-                cout << "left" << endl;
+                // cout << "left" << endl;
             }
         } else if ((this->input_contour[i].mid.x > this->Origin.x && this->input_contour[i].mid.y > this->Origin.y)) {
             if (this->input_contour[i].slope < 0) { // OK
                 right = -1;
-                cout << "left" << endl;
+                // cout << "left" << endl;
             } else if (this->input_contour[i].slope > 0) { //!!!!!!!
                 right = 0;
-                cout << "right???" << endl;
+                // cout << "right???" << endl;
             }
         } else if ((this->input_contour[i].mid.x < this->Origin.x && this->input_contour[i].mid.y > this->Origin.y)) {
             if (this->input_contour[i].slope < 0) { // !!!!!
                 right = 0;
-                cout << "left???" << endl;
+                // cout << "left???" << endl;
             } else if (this->input_contour[i].slope > 0) { // OK
                 right = 1;
-                cout << "right" << endl;
+                // cout << "right" << endl;
             }
         }
 
@@ -111,13 +111,41 @@ void Printer::draw_inner_polygon()
         lineTmp.a = Point(this->input_contour[i].a.x + this->tool * tangentVector[0], this->input_contour[i].a.y + this->tool * tangentVector[1]);
         lineTmp.b = Point(this->input_contour[i].b.x + this->tool * tangentVector[0], this->input_contour[i].b.y + this->tool * tangentVector[1]);
 
-        line(img, lineTmp.a, lineTmp.b, Scalar(0, 255, 0));
+        lineTmp.slope = this->input_contour[i].slope;
+
+        this->inner_contour.push_back(lineTmp);
+        // cout << this->inner_contour[i].a << " " << this->inner_contour[i].b << endl;
+
+        // line(img, lineTmp.a, lineTmp.b, Scalar(0, 255, 0));
         // line(img, this->inner_contour[i].a, this->inner_contour[i].b, Scalar(0, 255, 0));
 
-        cout << "Unit: " << tangentVector[0] << "  " << tangentVector[1] << endl;
+        // cout << "Unit: " << tangentVector[0] << "  " << tangentVector[1] << endl;
+        // imshow("polygon_contour", this->img);
+        // waitKey(0);
+    }
+
+    Point interaction;
+
+    for (uint i = 0; i < this->inner_contour.size(); i++) {
+        if (i + 1 != this->inner_contour.size()) {
+            interaction = this->find_interaction(this->inner_contour[i], this->inner_contour[i + 1]);
+            this->inner_vertices.push_back(interaction);
+        } else {
+            interaction = this->find_interaction(this->inner_contour[i], this->inner_contour[0]);
+            this->inner_vertices.push_back(interaction);
+        }
+        cout << this->inner_vertices[i] << endl;
+    }
+
+    this->point2line(this->inner_vertices, this->inner_contour);
+
+    for (uint i = 0; i < this->inner_contour.size(); i++) {
+        // cout << this->inner_contour[i].a << "  " << this->inner_contour[i].b << endl;
+        line(this->img, this->inner_contour[i].a, this->inner_contour[i].b, Scalar(0, 255, 0));
         imshow("polygon_contour", this->img);
         waitKey(0);
     }
+
     imshow("polygon_contour", this->img);
     waitKey(0);
 }
@@ -200,11 +228,28 @@ cv::Point Printer::find_centroid(vector<Point> vertices)
     return centroid;
 }
 
-void Printer::find_interaction(Line line_A, Line line_B) {}
+cv::Point Printer::find_interaction(Line lineA, Line lineB)
+{
+    Point interaction;
+    float interceptA = (float)lineA.a.y - lineA.slope * (float)lineA.a.x;
+    float interceptB = (float)lineB.a.y - lineB.slope * (float)lineB.a.x;
+
+    // cout << "A: " << lineA.a.y << " - " << lineA.slope << " * " << lineA.a.x << " = " << interceptA << endl;
+    // cout << "B: " << lineB.a.y << " - " << lineB.slope << " * " << lineB.a.x << " = " << interceptB << endl;
+    // cout << interceptA << "  " << interceptB << endl;
+
+    interaction.x = (int)((interceptB - interceptA) / (lineA.slope - lineB.slope));
+    interaction.y = (int)(lineA.slope * (float)interaction.x + (float)interceptA);
+
+    // cout << interaction << endl;
+
+    return interaction;
+}
 
 void Printer::point2line(vector<cv::Point>& points, vector<Line>& lines)
 {
     Line lineTmp;
+    lines.clear();
 
     for (uint i = 0; i < points.size(); i++) {
         if (i + 1 != points.size()) {

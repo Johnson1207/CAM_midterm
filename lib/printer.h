@@ -35,7 +35,7 @@ private:
     void initial_vertives(std::string src);
 
     cv::Point find_centroid(std::vector<cv::Point> vertices);
-    void find_interaction(Line line_A, Line line_B);
+    cv::Point find_interaction(Line lineA, Line lineB);
     void point2line(std::vector<cv::Point>& points, std::vector<Line>& lines);
 
     cv::Mat img;
