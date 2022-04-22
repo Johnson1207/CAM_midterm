@@ -12,6 +12,7 @@ int main(int argc, char** argv)
     Printer printer(argv[1]);
     printer.draw_polygon_contour();
     printer.draw_inner_polygon();
+    printer.draw_scan_line();
 
     return 0;
 }

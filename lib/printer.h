@@ -39,10 +39,14 @@ private:
     void point2line(std::vector<cv::Point>& points, std::vector<Line>& lines);
 
     cv::Mat img;
+    cv::Mat inner;
+    cv::Mat scan;
+    cv::Mat path;
     cv::Point Origin;
 
     std::vector<cv::Point> input_vertices;
     std::vector<cv::Point> inner_vertices;
+    std::vector<cv::Point> scan_vertices;
 
     std::vector<Line> input_contour;
     std::vector<Line> inner_contour;

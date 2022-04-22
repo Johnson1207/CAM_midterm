@@ -9,6 +9,11 @@ Printer::Printer(string vertices_path, int tool_size)
     this->Origin = Point(img.cols / 2, img.rows / 2);
     line(img, Point(0, img.rows / 2), Point(img.cols, img.rows / 2), Scalar(255, 255, 255));
     line(img, Point(img.cols / 2, 0), Point(img.cols / 2, img.rows), Scalar(255, 255, 255));
+
+    this->img.copyTo(this->inner);
+    this->img.copyTo(this->scan);
+    this->img.copyTo(this->scan);
+
     this->initial_vertives(vertices_path);
 
     this->tool = tool_size;
@@ -21,92 +26,38 @@ Printer::~Printer() { destroyAllWindows(); }
 void Printer::draw_polygon_contour()
 {
     for (uint i = 0; i < this->input_contour.size(); i++) {
-        line(img, this->input_contour[i].a, this->input_contour[i].b, Scalar(0, 0, 255));
+        line(img, this->input_contour[i].a, this->input_contour[i].b, Scalar(0, 255, 0));
+        line(inner, this->input_contour[i].a, this->input_contour[i].b, Scalar(255, 0, 0));
+        line(scan, this->input_contour[i].a, this->input_contour[i].b, Scalar(255, 0, 0));
+        line(path, this->input_contour[i].a, this->input_contour[i].b, Scalar(255, 0, 0));
     }
     Point centroid;
     centroid = this->find_centroid(this->input_vertices);
 
     circle(img, centroid, 2, Scalar(255, 0, 0));
 
-    imshow("polygon_contour", this->img);
+    imshow("scanning process", this->img);
     waitKey(0);
 }
 
 void Printer::draw_inner_polygon()
 {
+    imshow("scanning process", this->inner);
+    waitKey(0);
+
     Line lineTmp;
-    int right = 0;
 
     for (uint i = 0; i < this->input_contour.size(); i++) {
         // cout << this->input_contour[i].mid << endl;
-        float tangentVector[2] = { 1, -1 / this->input_contour[i].slope };
+        float tangentVector[2] = { -1 * (float)(this->input_contour[i].b.y - this->input_contour[i].a.y), 1 * (float)(this->input_contour[i].b.x - input_contour[i].a.x) };
         // cout << "Origin: " << tangentVector[0] << "  " << tangentVector[1] << endl;
 
-        if ((this->input_contour[i].mid.x < this->Origin.x && this->input_contour[i].mid.y < this->Origin.y)) {
-            if (this->input_contour[i].slope < 0) { // OK
-                right = 1;
-                // cout << "right" << endl;
-            } else if (this->input_contour[i].slope > 0) { //!!!!!!
-                right = 0;
-                // cout << "left???" << endl;
-            }
-        } else if ((this->input_contour[i].mid.x > this->Origin.x && this->input_contour[i].mid.y < this->Origin.y)) {
-            if (this->input_contour[i].slope < 0) { //!!!!!
-                right = 0;
-                // cout << "right???" << endl;
-            } else if (this->input_contour[i].slope > 0) { // OK
-                right = -1;
-                // cout << "left" << endl;
-            }
-        } else if ((this->input_contour[i].mid.x > this->Origin.x && this->input_contour[i].mid.y > this->Origin.y)) {
-            if (this->input_contour[i].slope < 0) { // OK
-                right = -1;
-                // cout << "left" << endl;
-            } else if (this->input_contour[i].slope > 0) { //!!!!!!!
-                right = 0;
-                // cout << "right???" << endl;
-            }
-        } else if ((this->input_contour[i].mid.x < this->Origin.x && this->input_contour[i].mid.y > this->Origin.y)) {
-            if (this->input_contour[i].slope < 0) { // !!!!!
-                right = 0;
-                // cout << "left???" << endl;
-            } else if (this->input_contour[i].slope > 0) { // OK
-                right = 1;
-                // cout << "right" << endl;
-            }
-        }
+        cout << "O:" << tangentVector[0] << " " << tangentVector[1] << endl;
+        float tempX = tangentVector[0] / sqrt(pow(tangentVector[0], 2) + pow(tangentVector[1], 2));
+        tangentVector[1] = tangentVector[1] / sqrt(pow(tangentVector[0], 2) + pow(tangentVector[1], 2));
+        tangentVector[0] = tempX;
 
-        if (right == 1) {
-            tangentVector[0] = tangentVector[0] / sqrt(pow(tangentVector[0], 2) + pow(tangentVector[1], 2));
-            tangentVector[1] = tangentVector[1] / sqrt(pow(tangentVector[0], 2) + pow(tangentVector[1], 2));
-        } else if (right == -1) {
-            tangentVector[0] = -1 * tangentVector[0] / sqrt(pow(tangentVector[0], 2) + pow(tangentVector[1], 2));
-            tangentVector[1] = -1 * tangentVector[1] / sqrt(pow(tangentVector[0], 2) + pow(tangentVector[1], 2));
-        } else {
-            if ((this->input_contour[i].a.x < this->Origin.x) && (this->input_contour[i].b.x < this->Origin.x)) {
-                tangentVector[0] = tangentVector[0] / sqrt(pow(tangentVector[0], 2) + pow(tangentVector[1], 2));
-                tangentVector[1] = tangentVector[1] / sqrt(pow(tangentVector[0], 2) + pow(tangentVector[1], 2));
-            } else if ((this->input_contour[i].a.x > this->Origin.x) && (this->input_contour[i].b.x > this->Origin.x)) {
-                tangentVector[0] = -1 * tangentVector[0] / sqrt(pow(tangentVector[0], 2) + pow(tangentVector[1], 2));
-                tangentVector[1] = -1 * tangentVector[1] / sqrt(pow(tangentVector[0], 2) + pow(tangentVector[1], 2));
-            } else if ((this->input_contour[i].a.y < this->Origin.y) && (this->input_contour[i].b.y < this->Origin.y)) {
-                if (tangentVector[1] > 0) {
-                    tangentVector[0] = tangentVector[0] / sqrt(pow(tangentVector[0], 2) + pow(tangentVector[1], 2));
-                    tangentVector[1] = tangentVector[1] / sqrt(pow(tangentVector[0], 2) + pow(tangentVector[1], 2));
-                } else if (tangentVector[1] < 0) {
-                    tangentVector[0] = -1 * tangentVector[0] / sqrt(pow(tangentVector[0], 2) + pow(tangentVector[1], 2));
-                    tangentVector[1] = -1 * tangentVector[1] / sqrt(pow(tangentVector[0], 2) + pow(tangentVector[1], 2));
-                }
-            } else if ((this->input_contour[i].a.y > this->Origin.y) && (this->input_contour[i].b.y > this->Origin.y)) {
-                if (tangentVector[1] > 0) {
-                    tangentVector[0] = -1 * tangentVector[0] / sqrt(pow(tangentVector[0], 2) + pow(tangentVector[1], 2));
-                    tangentVector[1] = -1 * tangentVector[1] / sqrt(pow(tangentVector[0], 2) + pow(tangentVector[1], 2));
-                } else if (tangentVector[1] < 0) {
-                    tangentVector[0] = tangentVector[0] / sqrt(pow(tangentVector[0], 2) + pow(tangentVector[1], 2));
-                    tangentVector[1] = tangentVector[1] / sqrt(pow(tangentVector[0], 2) + pow(tangentVector[1], 2));
-                }
-            }
-        }
+        cout << "U:" << tangentVector[0] << " " << tangentVector[1] << endl;
 
         lineTmp.a = Point(this->input_contour[i].a.x + this->tool * tangentVector[0], this->input_contour[i].a.y + this->tool * tangentVector[1]);
         lineTmp.b = Point(this->input_contour[i].b.x + this->tool * tangentVector[0], this->input_contour[i].b.y + this->tool * tangentVector[1]);
@@ -116,13 +67,13 @@ void Printer::draw_inner_polygon()
         this->inner_contour.push_back(lineTmp);
         // cout << this->inner_contour[i].a << " " << this->inner_contour[i].b << endl;
 
-        // line(img, lineTmp.a, lineTmp.b, Scalar(0, 255, 0));
-        // line(img, this->inner_contour[i].a, this->inner_contour[i].b, Scalar(0, 255, 0));
+        // line(inner, lineTmp.a, lineTmp.b, Scalar(0, 255, 0));
+        // line(inner, this->inner_contour[i].a, this->inner_contour[i].b, Scalar(0, 255, 0));
 
         // cout << "Unit: " << tangentVector[0] << "  " << tangentVector[1] << endl;
-        // imshow("polygon_contour", this->img);
-        // waitKey(0);
     }
+    // imshow("scanning process", this->inner);
+    // waitKey(0);
 
     Point interaction;
 
@@ -134,23 +85,79 @@ void Printer::draw_inner_polygon()
             interaction = this->find_interaction(this->inner_contour[i], this->inner_contour[0]);
             this->inner_vertices.push_back(interaction);
         }
-        cout << this->inner_vertices[i] << endl;
+        // cout << this->inner_vertices[i] << endl;
     }
 
     this->point2line(this->inner_vertices, this->inner_contour);
 
     for (uint i = 0; i < this->inner_contour.size(); i++) {
         // cout << this->inner_contour[i].a << "  " << this->inner_contour[i].b << endl;
-        line(this->img, this->inner_contour[i].a, this->inner_contour[i].b, Scalar(0, 255, 0));
-        imshow("polygon_contour", this->img);
-        waitKey(0);
-    }
+        line(this->inner, this->inner_contour[i].a, this->inner_contour[i].b, Scalar(0, 255, 0));
+        line(this->scan, this->inner_contour[i].a, this->inner_contour[i].b, Scalar(255, 0, 0));
+        line(this->path, this->inner_contour[i].a, this->inner_contour[i].b, Scalar(255, 0, 0));
 
-    imshow("polygon_contour", this->img);
+        // imshow("scanning process", this->inner);
+        // waitKey(0);
+    }
+    imshow("scanning process", this->inner);
     waitKey(0);
 }
 
-void Printer::draw_scan_line() {}
+void Printer::draw_scan_line()
+{
+    imshow("scanning process", this->scan);
+    waitKey(0);
+    // Find highest point
+    cv::Point highest;
+    for (uint i = 0; i < this->inner_vertices.size(); i++) {
+        if (i == 0)
+            highest = this->inner_vertices[i];
+        else if (highest.y > this->inner_vertices[i].y)
+            highest = this->inner_vertices[i];
+    }
+
+    // Find lowest point
+    cv::Point lowest;
+    for (uint i = 0; i < this->inner_vertices.size(); i++) {
+        if (i == 0)
+            lowest = this->inner_vertices[i];
+        else if (lowest.y < this->inner_vertices[i].y)
+            lowest = this->inner_vertices[i];
+    }
+
+    // Find scan line
+    int s = highest.y + this->tool;
+    while (s < lowest.y) {
+        Line scanning;
+        scanning.a = Point(0, s);
+        scanning.b = Point(img.cols, s);
+        scanning.slope = 0;
+
+        Point tmp;
+
+        for (uint i = 0; i < this->inner_contour.size(); i++) {
+            if (this->inner_contour[i].a.y<s<this->inner_contour[i].b.y || this->inner_contour[i].a.y> s> this->inner_contour[i].b.y) {
+                tmp = this->find_interaction(this->inner_contour[i], scanning);
+                this->scan_vertices.push_back(tmp);
+            } else if (this->inner_contour[i].a.y == s) {
+                this->scan_vertices.push_back(this->inner_contour[i].a);
+            } else if (this->inner_contour[i].b.y == s) {
+                this->scan_vertices.push_back(this->inner_contour[i].b);
+            }
+        }
+
+        imshow("scanning process", this->scan);
+        waitKey(0);
+
+        s += this->tool * 2;
+    }
+
+    for (uint i = 0; i < this->scan_vertices.size(); i += 2) {
+        line(this->scan, this->scan_vertices[i], this->scan_vertices[i + 1], Scalar(0, 255, 0));
+        // line(this->path, this->scan_vertices.at(-1), this->scan_vertices.at(-2), Scalar(255, 0, 0));
+        cout << this->scan_vertices[i] << " " << this->scan_vertices[i + 1] << endl;
+    }
+}
 
 void Printer::draw_tool_path() {}
 
@@ -238,8 +245,8 @@ cv::Point Printer::find_interaction(Line lineA, Line lineB)
     // cout << "B: " << lineB.a.y << " - " << lineB.slope << " * " << lineB.a.x << " = " << interceptB << endl;
     // cout << interceptA << "  " << interceptB << endl;
 
-    interaction.x = (int)((interceptB - interceptA) / (lineA.slope - lineB.slope));
-    interaction.y = (int)(lineA.slope * (float)interaction.x + (float)interceptA);
+    interaction.x = (int)round((interceptB - interceptA) / (lineA.slope - lineB.slope));
+    interaction.y = (int)round(lineA.slope * (float)interaction.x + (float)interceptA);
 
     // cout << interaction << endl;
 
