@@ -136,18 +136,22 @@ void Printer::draw_scan_line()
         Point tmp;
 
         for (uint i = 0; i < this->inner_contour.size(); i++) {
-            if (this->inner_contour[i].a.y<s<this->inner_contour[i].b.y || this->inner_contour[i].a.y> s> this->inner_contour[i].b.y) {
-                tmp = this->find_interaction(this->inner_contour[i], scanning);
-                this->scan_vertices.push_back(tmp);
+            if (this->inner_contour[i].a.y < this->inner_contour[i].b.y) {
+                if (this->inner_contour[i].a.y < s && s < this->inner_contour[i].b.y) {
+                    tmp = this->find_interaction(this->inner_contour[i], scanning);
+                    this->scan_vertices.push_back(tmp);
+                }
+            } else if (this->inner_contour[i].a.y > this->inner_contour[i].b.y) {
+                if (this->inner_contour[i].a.y > s && s > this->inner_contour[i].b.y) {
+                    tmp = this->find_interaction(this->inner_contour[i], scanning);
+                    this->scan_vertices.push_back(tmp);
+                }
             } else if (this->inner_contour[i].a.y == s) {
                 this->scan_vertices.push_back(this->inner_contour[i].a);
             } else if (this->inner_contour[i].b.y == s) {
                 this->scan_vertices.push_back(this->inner_contour[i].b);
             }
         }
-
-        imshow("scanning process", this->scan);
-        waitKey(0);
 
         s += this->tool * 2;
     }
@@ -156,6 +160,8 @@ void Printer::draw_scan_line()
         line(this->scan, this->scan_vertices[i], this->scan_vertices[i + 1], Scalar(0, 255, 0));
         // line(this->path, this->scan_vertices.at(-1), this->scan_vertices.at(-2), Scalar(255, 0, 0));
         cout << this->scan_vertices[i] << " " << this->scan_vertices[i + 1] << endl;
+        imshow("scanning process", this->scan);
+        waitKey(0);
     }
 }
 
