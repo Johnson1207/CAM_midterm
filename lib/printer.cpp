@@ -12,7 +12,7 @@ Printer::Printer(string vertices_path, int tool_size)
 
     this->img.copyTo(this->inner);
     this->img.copyTo(this->scan);
-    this->img.copyTo(this->scan);
+    this->img.copyTo(this->path);
 
     this->initial_vertives(vertices_path);
 
@@ -52,12 +52,9 @@ void Printer::draw_inner_polygon()
         float tangentVector[2] = { -1 * (float)(this->input_contour[i].b.y - this->input_contour[i].a.y), 1 * (float)(this->input_contour[i].b.x - input_contour[i].a.x) };
         // cout << "Origin: " << tangentVector[0] << "  " << tangentVector[1] << endl;
 
-        cout << "O:" << tangentVector[0] << " " << tangentVector[1] << endl;
         float tempX = tangentVector[0] / sqrt(pow(tangentVector[0], 2) + pow(tangentVector[1], 2));
         tangentVector[1] = tangentVector[1] / sqrt(pow(tangentVector[0], 2) + pow(tangentVector[1], 2));
         tangentVector[0] = tempX;
-
-        cout << "U:" << tangentVector[0] << " " << tangentVector[1] << endl;
 
         lineTmp.a = Point(this->input_contour[i].a.x + this->tool * tangentVector[0], this->input_contour[i].a.y + this->tool * tangentVector[1]);
         lineTmp.b = Point(this->input_contour[i].b.x + this->tool * tangentVector[0], this->input_contour[i].b.y + this->tool * tangentVector[1]);
@@ -158,14 +155,52 @@ void Printer::draw_scan_line()
 
     for (uint i = 0; i < this->scan_vertices.size(); i += 2) {
         line(this->scan, this->scan_vertices[i], this->scan_vertices[i + 1], Scalar(0, 255, 0));
-        // line(this->path, this->scan_vertices.at(-1), this->scan_vertices.at(-2), Scalar(255, 0, 0));
-        cout << this->scan_vertices[i] << " " << this->scan_vertices[i + 1] << endl;
-        imshow("scanning process", this->scan);
-        waitKey(0);
+        line(this->path, this->scan_vertices[i], this->scan_vertices[i + 1], Scalar(255, 0, 0));
+        // cout << this->scan_vertices[i] << " " << this->scan_vertices[i + 1] << endl;
     }
+    imshow("scanning process", this->scan);
+    waitKey(0);
 }
 
-void Printer::draw_tool_path() {}
+void Printer::draw_tool_path()
+{
+    imshow("scanning process", this->path);
+    waitKey(0);
+
+    Line tmpLine;
+    Point tmpPoint;
+
+    for (uint i = 0; i < this->scan_vertices.size(); i += 2) {
+        if (i % 4 == 0) {
+            if (this->scan_vertices[i].x > this->scan_vertices[i + 1].x) {
+                tmpPoint = this->scan_vertices[i];
+                this->scan_vertices[i] = this->scan_vertices[i + 1];
+                this->scan_vertices[i + 1] = tmpPoint;
+            }
+        } else {
+            if (this->scan_vertices[i].x < this->scan_vertices[i + 1].x) {
+                tmpPoint = this->scan_vertices[i];
+                this->scan_vertices[i] = this->scan_vertices[i + 1];
+                this->scan_vertices[i + 1] = tmpPoint;
+            }
+        }
+    }
+
+    for (uint i = 0; i < this->scan_vertices.size(); i++) {
+        if (i + 1 != this->scan_vertices.size()) {
+            tmpLine.a = this->scan_vertices[i];
+            tmpLine.b = this->scan_vertices[i + 1];
+        }
+
+        this->tool_path.push_back(tmpLine);
+    }
+
+    for (uint i = 0; i < this->tool_path.size(); i++) {
+        line(this->path, this->tool_path[i].a, this->tool_path[i].b, Scalar(0, 255, 0));
+    }
+    imshow("scanning process", this->path);
+    waitKey(0);
+}
 
 void Printer::initial_vertives(string src)
 {

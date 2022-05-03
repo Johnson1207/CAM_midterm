@@ -50,6 +50,7 @@ private:
 
     std::vector<Line> input_contour;
     std::vector<Line> inner_contour;
+    std::vector<Line> tool_path;
 
     int tool;
 };

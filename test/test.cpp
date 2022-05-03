@@ -13,6 +13,7 @@ int main(int argc, char** argv)
     printer.draw_polygon_contour();
     printer.draw_inner_polygon();
     printer.draw_scan_line();
+    printer.draw_tool_path();
 
     return 0;
 }
