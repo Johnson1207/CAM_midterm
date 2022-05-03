@@ -21,7 +21,14 @@ Printer::Printer(string vertices_path, int tool_size)
 
 Printer::Printer() {}
 
-Printer::~Printer() { destroyAllWindows(); }
+Printer::~Printer()
+{
+    imwrite("Origin_Contour.jpg", this->img);
+    imwrite("Inner_Contour.jpg", this->inner);
+    imwrite("Scan_Line.jpg", this->scan);
+    imwrite("Path.jpg", this->path);
+    destroyAllWindows();
+}
 
 void Printer::draw_polygon_contour()
 {
@@ -223,11 +230,6 @@ void Printer::draw_tool_path()
     Line tmpLine;
     Point tmpPoint;
 
-    /*for (uint i = 0; i < this->scan_lines.size(); i++) {
-        cout << i << ": " << this->scan_lines[i].a << " " << this->scan_lines[i].b << endl;
-        cout << "/////////////////////////////////////////" << endl;
-    }*/
-
     for (uint i = 0; i < this->scan_lines.size() - 1; i++) {
         if ((this->scan_lines[i].b != this->scan_lines[i + 1].a) && (this->scan_lines[i].b.y == this->scan_lines[i + 1].a.y)) {
             this->scan_lines.push_back(this->scan_lines[i + 1]);
@@ -237,12 +239,6 @@ void Printer::draw_tool_path()
     }
 
     this->line2point(this->scan_lines, this->scan_vertices, 0, 0);
-
-    /*for (uint i = 0; i < this->scan_vertices.size(); i++) {
-        circle(this->scan, this->scan_vertices[i], 1, Scalar(0, 0, 255));
-        imshow("scanning process", this->scan);
-        waitKey(0);
-    }*/
 
     for (uint i = 0; i < this->scan_vertices.size(); i += 2) {
         if (i % 4 == 0) {
@@ -271,11 +267,39 @@ void Printer::draw_tool_path()
 
     for (uint i = 0; i < this->tool_path.size(); i++) {
         line(this->path, this->tool_path[i].a, this->tool_path[i].b, Scalar(0, 255, 0));
-        imshow("scanning process", this->path);
-        waitKey(0);
+        // imshow("scanning process", this->path);
+        // waitKey(0);
     }
     imshow("scanning process", this->path);
     waitKey(0);
+}
+
+void Printer::generate_g_codes(string dst)
+{
+    this->line2point(this->inner_contour, this->final_path, 1, 0);
+    for (uint i = 0; i < this->inner_contour.size(); i++) {
+        cout << inner_contour[i].a << this->inner_contour[i].b << endl;
+    }
+
+    vector<Point> tmp;
+    this->line2point(this->tool_path, tmp, 1, 0);
+
+    for (uint i = 0; i < final_path.size(); i++) {
+        this->final_path[i].x = this->final_path[i].x - this->Origin.x;
+        this->final_path[i].y = this->Origin.y - this->final_path[i].y;
+    }
+
+    // concat two vector
+    this->final_path.insert(this->final_path.end(), tmp.begin(), tmp.end());
+
+    std::ofstream file;
+    file.open(dst);
+
+    for (uint i = 0; i < this->final_path.size(); i++) {
+        file << "N" << setfill('0') << setw(3) << i << " G01"
+             << " X" << this->final_path[i].x << " Y" << this->final_path[i].y << "\n";
+    }
+    file.close();
 }
 
 void Printer::initial_vertives(string src)
@@ -377,9 +401,10 @@ void Printer::line2point(std::vector<Line>& lines, std::vector<cv::Point>& point
         for (uint i = 0; i < lines.size(); i++) {
             pointTmp = lines[i].a;
             points.push_back(pointTmp);
-            if (!loop)
+            if (!loop && i == lines.size() - 1) {
                 pointTmp = lines[i].b;
-            points.push_back(pointTmp);
+                points.push_back(pointTmp);
+            }
         }
     }
 }

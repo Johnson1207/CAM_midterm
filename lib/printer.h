@@ -31,6 +31,8 @@ public:
     void draw_scan_line();
     void draw_tool_path();
 
+    void generate_g_codes(std::string dst);
+
 private:
     void initial_vertives(std::string src);
 
@@ -47,6 +49,7 @@ private:
     std::vector<cv::Point> input_vertices;
     std::vector<cv::Point> inner_vertices;
     std::vector<cv::Point> scan_vertices;
+    std::vector<cv::Point> final_path;
 
     std::vector<Line> input_contour;
     std::vector<Line> inner_contour;

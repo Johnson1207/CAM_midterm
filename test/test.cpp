@@ -15,5 +15,7 @@ int main(int argc, char** argv)
     printer.draw_scan_line();
     printer.draw_tool_path();
 
+    printer.generate_g_codes("gcode.txt");
+
     return 0;
 }
