@@ -34,9 +34,9 @@ public:
 private:
     void initial_vertives(std::string src);
 
-    cv::Point find_centroid(std::vector<cv::Point> vertices);
     cv::Point find_interaction(Line lineA, Line lineB);
-    void point2line(std::vector<cv::Point>& points, std::vector<Line>& lines);
+    void point2line(std::vector<cv::Point>& points, std::vector<Line>& lines, bool loop = 1);
+    void line2point(std::vector<Line>& lines, std::vector<cv::Point>& points, bool concat = 1, bool loop = 1);
 
     cv::Mat img;
     cv::Mat inner;
@@ -50,6 +50,7 @@ private:
 
     std::vector<Line> input_contour;
     std::vector<Line> inner_contour;
+    std::vector<Line> scan_lines;
     std::vector<Line> tool_path;
 
     int tool;

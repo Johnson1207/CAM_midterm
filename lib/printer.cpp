@@ -31,10 +31,6 @@ void Printer::draw_polygon_contour()
         line(scan, this->input_contour[i].a, this->input_contour[i].b, Scalar(255, 0, 0));
         line(path, this->input_contour[i].a, this->input_contour[i].b, Scalar(255, 0, 0));
     }
-    Point centroid;
-    centroid = this->find_centroid(this->input_vertices);
-
-    circle(img, centroid, 2, Scalar(255, 0, 0));
 
     imshow("scanning process", this->img);
     waitKey(0);
@@ -49,19 +45,33 @@ void Printer::draw_inner_polygon()
 
     for (uint i = 0; i < this->input_contour.size(); i++) {
         // cout << this->input_contour[i].mid << endl;
-        float tangentVector[2] = { -1 * (float)(this->input_contour[i].b.y - this->input_contour[i].a.y), 1 * (float)(this->input_contour[i].b.x - input_contour[i].a.x) };
-        // cout << "Origin: " << tangentVector[0] << "  " << tangentVector[1] << endl;
+        if (this->input_contour[i].a.x != this->input_contour[i].b.x) {
+            float tangentVector[2] = { -1 * (float)(this->input_contour[i].b.y - this->input_contour[i].a.y), 1 * (float)(this->input_contour[i].b.x - input_contour[i].a.x) };
+            // cout << "Origin: " << tangentVector[0] << "  " << tangentVector[1] << endl;
 
-        float tempX = tangentVector[0] / sqrt(pow(tangentVector[0], 2) + pow(tangentVector[1], 2));
-        tangentVector[1] = tangentVector[1] / sqrt(pow(tangentVector[0], 2) + pow(tangentVector[1], 2));
-        tangentVector[0] = tempX;
+            float tempX = tangentVector[0] / sqrt(pow(tangentVector[0], 2) + pow(tangentVector[1], 2));
+            tangentVector[1] = tangentVector[1] / sqrt(pow(tangentVector[0], 2) + pow(tangentVector[1], 2));
+            tangentVector[0] = tempX;
 
-        lineTmp.a = Point(this->input_contour[i].a.x + this->tool * tangentVector[0], this->input_contour[i].a.y + this->tool * tangentVector[1]);
-        lineTmp.b = Point(this->input_contour[i].b.x + this->tool * tangentVector[0], this->input_contour[i].b.y + this->tool * tangentVector[1]);
+            lineTmp.a = Point(this->input_contour[i].a.x + this->tool * tangentVector[0], this->input_contour[i].a.y + this->tool * tangentVector[1]);
+            lineTmp.b = Point(this->input_contour[i].b.x + this->tool * tangentVector[0], this->input_contour[i].b.y + this->tool * tangentVector[1]);
 
-        lineTmp.slope = this->input_contour[i].slope;
+            lineTmp.slope = this->input_contour[i].slope;
 
-        this->inner_contour.push_back(lineTmp);
+            this->inner_contour.push_back(lineTmp);
+        } else {
+            if (this->input_contour[i].a.y > this->input_contour[i].b.y) {
+                lineTmp.a = Point(this->input_contour[i].a.x + this->tool, this->input_contour[i].a.y);
+                lineTmp.b = Point(this->input_contour[i].b.x + this->tool, this->input_contour[i].b.y);
+            } else {
+                lineTmp.a = Point(this->input_contour[i].a.x - this->tool, this->input_contour[i].a.y);
+                lineTmp.b = Point(this->input_contour[i].b.x - this->tool, this->input_contour[i].b.y);
+            }
+
+            lineTmp.slope = this->input_contour[i].slope;
+
+            this->inner_contour.push_back(lineTmp);
+        }
         // cout << this->inner_contour[i].a << " " << this->inner_contour[i].b << endl;
 
         // line(inner, lineTmp.a, lineTmp.b, Scalar(0, 255, 0));
@@ -136,16 +146,38 @@ void Printer::draw_scan_line()
             if (this->inner_contour[i].a.y < this->inner_contour[i].b.y) {
                 if (this->inner_contour[i].a.y < s && s < this->inner_contour[i].b.y) {
                     tmp = this->find_interaction(this->inner_contour[i], scanning);
+                    tmp.y = s;
                     this->scan_vertices.push_back(tmp);
                 }
             } else if (this->inner_contour[i].a.y > this->inner_contour[i].b.y) {
                 if (this->inner_contour[i].a.y > s && s > this->inner_contour[i].b.y) {
                     tmp = this->find_interaction(this->inner_contour[i], scanning);
+                    tmp.y = s;
                     this->scan_vertices.push_back(tmp);
                 }
             } else if (this->inner_contour[i].a.y == s) {
+                if (i != 0) {
+                    // check if it is local highest or local lowest point
+                    if ((this->inner_contour[i].a.y > this->inner_contour[i].b.y && this->inner_contour[i].a.y > this->inner_contour[i - 1].a.y)) {
+                        break;
+                    }
+                } else {
+                    if ((this->inner_contour[i].a.y < this->inner_contour[i].b.y && this->inner_contour[i].a.y < this->inner_contour.back().a.y)) {
+                        break;
+                    }
+                }
                 this->scan_vertices.push_back(this->inner_contour[i].a);
             } else if (this->inner_contour[i].b.y == s) {
+                if (i != this->inner_contour.size() - 1) {
+                    // check if it is local highest or local lowest point
+                    if ((this->inner_contour[i].b.y > this->inner_contour[i].a.y && this->inner_contour[i].b.y > this->inner_contour[i + 1].b.y)) {
+                        break;
+                    }
+                } else {
+                    if ((this->inner_contour[i].b.y > this->inner_contour[i].a.y && this->inner_contour[i].b.y > this->inner_contour[0].b.y)) {
+                        break;
+                    }
+                }
                 this->scan_vertices.push_back(this->inner_contour[i].b);
             }
         }
@@ -153,11 +185,32 @@ void Printer::draw_scan_line()
         s += this->tool * 2;
     }
 
-    for (uint i = 0; i < this->scan_vertices.size(); i += 2) {
-        line(this->scan, this->scan_vertices[i], this->scan_vertices[i + 1], Scalar(0, 255, 0));
-        line(this->path, this->scan_vertices[i], this->scan_vertices[i + 1], Scalar(255, 0, 0));
-        // cout << this->scan_vertices[i] << " " << this->scan_vertices[i + 1] << endl;
+    // sort
+    Point pointTmp;
+    for (uint i = 0; i < this->scan_vertices.size(); ++i) {
+        if (i != scan_vertices.size() - 1) {
+            if (this->scan_vertices[i].y == this->scan_vertices[i + 1].y) {
+                if (this->scan_vertices[i].x > this->scan_vertices[i + 1].x) {
+                    pointTmp = this->scan_vertices[i];
+                    this->scan_vertices[i] = this->scan_vertices[i + 1];
+                    this->scan_vertices[i + 1] = pointTmp;
+                    i = -1;
+                }
+            }
+        }
     }
+
+    this->point2line(this->scan_vertices, this->scan_lines, 0);
+
+    for (uint i = 0; i < this->scan_lines.size(); i++) {
+        if (this->scan_lines[i].b == this->scan_lines[i + 1].a) {
+            this->scan_lines.erase(this->scan_lines.begin() + i + 1);
+        }
+
+        line(this->scan, this->scan_lines[i].a, this->scan_lines[i].b, Scalar(0, 255, 0));
+        line(this->path, this->scan_lines[i].a, this->scan_lines[i].b, Scalar(255, 0, 0));
+    }
+
     imshow("scanning process", this->scan);
     waitKey(0);
 }
@@ -169,6 +222,27 @@ void Printer::draw_tool_path()
 
     Line tmpLine;
     Point tmpPoint;
+
+    /*for (uint i = 0; i < this->scan_lines.size(); i++) {
+        cout << i << ": " << this->scan_lines[i].a << " " << this->scan_lines[i].b << endl;
+        cout << "/////////////////////////////////////////" << endl;
+    }*/
+
+    for (uint i = 0; i < this->scan_lines.size() - 1; i++) {
+        if ((this->scan_lines[i].b != this->scan_lines[i + 1].a) && (this->scan_lines[i].b.y == this->scan_lines[i + 1].a.y)) {
+            this->scan_lines.push_back(this->scan_lines[i + 1]);
+            this->scan_lines.erase(this->scan_lines.begin() + i + 1);
+            i = -1;
+        }
+    }
+
+    this->line2point(this->scan_lines, this->scan_vertices, 0, 0);
+
+    /*for (uint i = 0; i < this->scan_vertices.size(); i++) {
+        circle(this->scan, this->scan_vertices[i], 1, Scalar(0, 0, 255));
+        imshow("scanning process", this->scan);
+        waitKey(0);
+    }*/
 
     for (uint i = 0; i < this->scan_vertices.size(); i += 2) {
         if (i % 4 == 0) {
@@ -197,6 +271,8 @@ void Printer::draw_tool_path()
 
     for (uint i = 0; i < this->tool_path.size(); i++) {
         line(this->path, this->tool_path[i].a, this->tool_path[i].b, Scalar(0, 255, 0));
+        imshow("scanning process", this->path);
+        waitKey(0);
     }
     imshow("scanning process", this->path);
     waitKey(0);
@@ -213,7 +289,7 @@ void Printer::initial_vertives(string src)
     int xTmp, yTmp;
     Point pointTmp;
 
-    Point centroid = { 0, 0 };
+    // Point centroid = { 0, 0 };
 
     while (getline(file, line)) {
         std::istringstream istr(line);
@@ -233,79 +309,48 @@ void Printer::initial_vertives(string src)
         this->input_vertices.push_back(pointTmp);
     }
 
-    centroid = this->find_centroid(this->input_vertices);
-
-    for (uint i = 0; i < this->input_vertices.size(); i++) {
-        this->input_vertices[i].x -= centroid.x;
-        this->input_vertices[i].y -= centroid.y;
-    }
-
     this->point2line(this->input_vertices, this->input_contour);
-}
-
-cv::Point Printer::find_centroid(vector<Point> vertices)
-{
-    Point centroid = { 0, 0 };
-    double signedArea = 0.0;
-    double x0 = 0.0; // Current vertex X
-    double y0 = 0.0; // Current vertex Y
-    double x1 = 0.0; // Next vertex X
-    double y1 = 0.0; // Next vertex Y
-    double a = 0.0;  // Partial signed area
-
-    // For all vertices
-    uint i = 0;
-    for (i = 0; i < vertices.size(); ++i) {
-        x0 = vertices[i].x;
-        y0 = vertices[i].y;
-        x1 = vertices[(i + 1) % (int)vertices.size()].x;
-        y1 = vertices[(i + 1) % (int)vertices.size()].y;
-        a = x0 * y1 - x1 * y0;
-        signedArea += a;
-        centroid.x += (x0 + x1) * a;
-        centroid.y += (y0 + y1) * a;
-    }
-
-    signedArea *= 0.5;
-    centroid.x /= (6.0 * signedArea);
-    centroid.y /= (6.0 * signedArea);
-
-    centroid.x = centroid.x - this->Origin.x;
-    centroid.y = centroid.y - this->Origin.y;
-
-    return centroid;
 }
 
 cv::Point Printer::find_interaction(Line lineA, Line lineB)
 {
     Point interaction;
-    float interceptA = (float)lineA.a.y - lineA.slope * (float)lineA.a.x;
-    float interceptB = (float)lineB.a.y - lineB.slope * (float)lineB.a.x;
+    if (isfinite(lineA.slope) && (isfinite(lineB.slope))) {
+        float interceptA = (float)lineA.a.y - lineA.slope * (float)lineA.a.x;
+        float interceptB = (float)lineB.a.y - lineB.slope * (float)lineB.a.x;
 
-    // cout << "A: " << lineA.a.y << " - " << lineA.slope << " * " << lineA.a.x << " = " << interceptA << endl;
-    // cout << "B: " << lineB.a.y << " - " << lineB.slope << " * " << lineB.a.x << " = " << interceptB << endl;
-    // cout << interceptA << "  " << interceptB << endl;
-
-    interaction.x = (int)round((interceptB - interceptA) / (lineA.slope - lineB.slope));
-    interaction.y = (int)round(lineA.slope * (float)interaction.x + (float)interceptA);
-
+        interaction.x = (int)round((interceptB - interceptA) / (lineA.slope - lineB.slope));
+        interaction.y = (int)round(lineA.slope * (float)interaction.x + (float)interceptA);
+    } else {
+        if (isinf(lineA.slope)) {
+            float interceptB = (float)lineB.a.y - lineB.slope * (float)lineB.a.x;
+            interaction.x = lineA.a.x;
+            interaction.y = (int)round(lineB.slope * (float)interaction.x + (float)interceptB);
+        } else if (isinf(lineB.slope)) {
+            float interceptA = (float)lineA.a.y - lineA.slope * (float)lineA.a.x;
+            interaction.x = lineB.a.x;
+            interaction.y = (int)round(lineA.slope * (float)interaction.x + (float)interceptA);
+        }
+    }
     // cout << interaction << endl;
 
     return interaction;
 }
 
-void Printer::point2line(vector<cv::Point>& points, vector<Line>& lines)
+void Printer::point2line(vector<cv::Point>& points, vector<Line>& lines, bool loop)
 {
     Line lineTmp;
     lines.clear();
 
     for (uint i = 0; i < points.size(); i++) {
-        if (i + 1 != points.size()) {
+        if (i != points.size() - 1) {
             lineTmp.a = points[i];
             lineTmp.b = points[i + 1];
-        } else {
+        } else if (loop) {
             lineTmp.a = points[i];
             lineTmp.b = points[0];
+        } else {
+            break;
         }
 
         lineTmp.slope = ((float)lineTmp.a.y - (float)lineTmp.b.y) / ((float)lineTmp.a.x - (float)lineTmp.b.x);
@@ -313,5 +358,28 @@ void Printer::point2line(vector<cv::Point>& points, vector<Line>& lines)
         lineTmp.mid = Point((lineTmp.a.x + lineTmp.b.x) / 2, (lineTmp.a.y + lineTmp.b.y) / 2);
 
         lines.push_back(lineTmp);
+    }
+}
+
+void Printer::line2point(std::vector<Line>& lines, std::vector<cv::Point>& points, bool concat, bool loop)
+{
+    Point pointTmp;
+    points.clear();
+
+    if (!concat) {
+        for (uint i = 0; i < lines.size(); i++) {
+            pointTmp = lines[i].a;
+            points.push_back(pointTmp);
+            pointTmp = lines[i].b;
+            points.push_back(pointTmp);
+        }
+    } else {
+        for (uint i = 0; i < lines.size(); i++) {
+            pointTmp = lines[i].a;
+            points.push_back(pointTmp);
+            if (!loop)
+                pointTmp = lines[i].b;
+            points.push_back(pointTmp);
+        }
     }
 }
